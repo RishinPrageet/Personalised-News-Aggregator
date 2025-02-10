@@ -1,41 +1,45 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <title>Profile</title>
-    <link rel="stylesheet" href="/static/output.css">
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ user.username }}'s Profile - News Hub</title>
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Open Sans', sans-serif;
+        }
+    </style>
 </head>
-<body class="bg-gray-100 flex justify-center items-center h-screen">
-    <div class="bg-white p-6 rounded shadow-md w-96">
-        <h2 class="text-xl font-bold mb-4">User Profile</h2>
-        <p><strong>Username:</strong> <span id="username"></span></p>
-        <p><strong>Email:</strong> <span id="email"></span></p>
-        <button onclick="logout()" class="bg-red-500 text-white p-2 rounded w-full mt-4">Logout</button>
+<body class="bg-gray-900 text-white">
+
+    <!-- Navigation Bar -->
+    <nav class="bg-gray-800 p-4">
+        <div class="container mx-auto flex justify-between items-center">
+            <a href="/" class="text-2xl font-semibold">News Hub</a>
+            <div class="space-x-4">
+                <a href="/" class="hover:underline">Home</a>
+                <a href="/user/profile" class="hover:underline">Profile</a>
+                <a href="/logout" class="hover:underline">Logout</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Profile Section -->
+    <div class="container mx-auto p-8">
+        <div class="bg-gray-700 p-6 rounded-lg shadow-xl">
+            <div class="flex flex-col items-center">
+                <h1 class="text-3xl font-bold">{{ user.username }}</h1>
+                <p class="text-xl text-gray-400 mt-2">{{ user.email }}</p>
+            </div>
+
+            <div class="mt-8">
+                <h2 class="text-2xl font-semibold">Recent Activities</h2>
+                <ul class="mt-4 space-y-4">
+                </ul>
+            </div>
+        </div>
     </div>
 
-    <script>
-        async function getProfile() {
-            const token = localStorage.getItem('token');
-            if (!token) {
-                window.location.href = '/login';
-                return;
-            }
-            const response = await fetch('/profile?token=' + token);
-            const data = await response.json();
-            if (response.ok) {
-                document.getElementById('username').innerText = data.username;
-                document.getElementById('email').innerText = data.email;
-            } else {
-                localStorage.removeItem('token');
-                window.location.href = '/login';
-            }
-        }
-
-        function logout() {
-            localStorage.removeItem('token');
-            window.location.href = '/login';
-        }
-
-        getProfile();
-    </script>
 </body>
 </html>

@@ -5,4 +5,5 @@ pydantic
 passlib[bcrypt]  
 pydantic[email]
 python-jose[cryptography]  
-jwt   
+jwt
+jinja2   

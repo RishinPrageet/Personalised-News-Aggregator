@@ -20,7 +20,7 @@ class UserRequest(BaseModel):
 
 class UserResponse(BaseModel):
     id: int
-    email: EmailStr
+    email: Optional[EmailStr] = None
     username: str
     created_at: datetime
 

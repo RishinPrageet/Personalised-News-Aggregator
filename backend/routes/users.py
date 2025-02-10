@@ -1,25 +1,25 @@
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException,Request
 from sqlalchemy.orm import Session
 from backend.database.db import get_db
 from backend.models.user import User  # Import the User model
 from backend.schemas.user import UserCreate,UserResponse
 from backend.utilities.hashing import hash_password
+from backend.routes.auth import get_current_user
+from jinja2 import Environment, FileSystemLoader
+from fastapi.templating import Jinja2Templates
 
-router = APIRouter()
+templates = Jinja2Templates(directory="frontend/templates")
 
+router=APIRouter(prefix="/user")
 
-@router.post("/users/", response_model=UserResponse)
-def create_user(user:UserCreate, db: Session = Depends(get_db)):
+@router.get("/profile")
+def get_user_profile(request: Request,current_user: UserResponse = Depends(get_current_user)):
+    print("near_end")
+    user={}
+    user["id"]=current_user.id
+    user['username']=current_user.username
+    print(user)
+    print(current_user)
+    return templates.TemplateResponse("profile.html", {"request": request, "user": current_user.model_dump()})
 
-    existing_user = db.query(User).filter(User.email == user.email).first()
-    if existing_user:
-        raise HTTPException(status_code=400, detail="Email already registered")
-    hashed_password = hash_password(user.password)   
-    db_user = User(email=user.email, username=user.username, password=hashed_password)
-    db.add(db_user)
-    db.commit()
-    db.refresh(db_user)
-    
-    
-    return db_user
