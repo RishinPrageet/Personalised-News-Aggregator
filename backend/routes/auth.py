@@ -2,7 +2,6 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request, Query,Fo
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
-from authlib.integrations.starlette_client import OAuth, OAuthError
 from sqlalchemy.orm import Session
 from backend.database.db import get_db
 from backend.models.user import User  # Import the User model
@@ -30,29 +29,13 @@ def generate_random_string(length=12):
 
 router = APIRouter(prefix="/auth")
 
-oauth = OAuth()
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-REDIRECT_URI = os.getenv("REDIRECT_URI")
-SECRET_KEY = os.getenv("SECRET_KEY")
 
-oauth.register(
-    name='google',
-    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_id=GOOGLE_CLIENT_ID,
-    client_secret=GOOGLE_CLIENT_SECRET,
-    client_kwargs={
-        'scope': 'email openid profile',
-        'redirect_uri': 'http://localhost:8000/auth/callback'
-    }
-)
+
+
 
 load_dotenv()  # Load environment variables from .env
 
-GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
-GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
-REDIRECT_URI = os.getenv("REDIRECT_URI")
-SECRET_KEY = os.getenv("SECRET_KEY")
+
 
 
 
@@ -105,7 +88,9 @@ async def register(request: Request, user: UserCreate=Depends(get_form_data) , d
 async def login(form_data: Annotated[customOAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db), error: str = Query(None)):
     user = await authenticate_user(form_data.username, form_data.username, form_data.password, db)
     if not user:
-        raise HTTPException(status_code=401, detail="Invalid credentials")
+        error = "Invalid Credentials, Try Again"
+        redirect_url = f"/login?error={quote(error)}"
+        return RedirectResponse(url=redirect_url,status_code=status.HTTP_303_SEE_OTHER)
     
     token = create_access_token(user.username, user.id, timedelta(minutes=30))
 
@@ -114,6 +99,7 @@ async def login(form_data: Annotated[customOAuth2PasswordRequestForm, Depends()]
     response.set_cookie(key="access_token", value=f"Bearer {token}", httponly=True)
     
     return response
+
 
 
 async def authenticate_user(username, email, password, db: Session):
@@ -200,7 +186,7 @@ async def google_callback(request: Request, db: Session = Depends(get_db)):
     """Handle Google OAuth callback and decode credentials directly."""
 
     if request.method == "GET":
-        credentials = request.query_params.get("credentials") # Assuming 'credentials' is in query params
+        credentials = request.query_params.get("credential") # Assuming 'credentials' is in query params
     elif request.method == "POST":
         form_data = await request.form()
         credentials = form_data.get("credential") # Assuming 'credentials' is in form data

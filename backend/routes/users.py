@@ -1,5 +1,6 @@
 
-from fastapi import APIRouter, Depends, HTTPException,Request
+from fastapi import APIRouter, Depends, HTTPException,Request,status
+from fastapi.responses import RedirectResponse
 from sqlalchemy.orm import Session
 from backend.database.db import get_db
 from backend.models.user import User  # Import the User model
@@ -23,3 +24,9 @@ def get_user_profile(request: Request,current_user: UserResponse = Depends(get_c
     print(current_user)
     return templates.TemplateResponse("profile.html", {"request": request, "user": current_user.model_dump()})
 
+@router.get("/logout")
+def get_user_profile(request: Request):
+    
+    response = RedirectResponse(url="/", status_code=status.HTTP_303_SEE_OTHER)
+    response.delete_cookie('access_token')
+    return response

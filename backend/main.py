@@ -1,5 +1,4 @@
 from fastapi import FastAPI, Depends,status
-from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import RedirectResponse
 from backend.routes import users, auth
 from backend.database.db import engine, Base
@@ -14,7 +13,7 @@ load_dotenv()
 # Create FastAPI app
 app = FastAPI()
 SECRET_KEY = os.getenv("SECRET_KEY")
-app.add_middleware(SessionMiddleware,secret_key=SECRET_KEY)
+
 # Create database tables
 Base.metadata.create_all(bind=engine)
 
