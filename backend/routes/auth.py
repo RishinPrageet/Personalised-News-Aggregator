@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status, Request, Query,Fo
 from fastapi.responses import RedirectResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from authlib.integrations.starlette_client import OAuth, OAuthError
 from sqlalchemy.orm import Session
 from backend.database.db import get_db
 from backend.models.user import User  # Import the User model
@@ -12,10 +13,37 @@ from fastapi.security import OAuth2PasswordBearer, OAuth2PasswordRequestForm
 from typing import Annotated, Optional
 from pydantic import BaseModel, EmailStr
 from datetime import timedelta, datetime
+
 from jose import jwt, JWTError
 from urllib.parse import quote
+import os
+from dotenv import load_dotenv  
+import requests
 
 router = APIRouter(prefix="/auth")
+
+oauth = OAuth()
+oauth.register(
+    name='google',
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
+    client_id=CLIENT_ID,
+    client_secret=CLIENT_SECRET,
+    client_kwargs={
+        'scope': 'email openid profile',
+        'redirect_uri': 'http://localhost:8000/auth'
+    }
+)
+
+load_dotenv()  # Load environment variables from .env
+
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+REDIRECT_URI = os.getenv("REDIRECT_URI")
+SECRET_KEY = os.getenv("SECRET_KEY")
+
+GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/auth"
+GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
+GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
 
 SECRET_KEY = "gojo-TheStrongest"  # Change this to a secure, random string
 ALGORITHM = "HS256"
@@ -142,3 +170,75 @@ def get_current_user(
             detail="Could not validate credentials",
             headers={"WWW-Authenticate": "Bearer"},
         )
+    
+@router.get("/google-login")
+def google_login():
+    """Redirect users to Google's OAuth consent screen."""
+    auth_url = (
+        f"{GOOGLE_AUTH_URL}?"
+        f"client_id={GOOGLE_CLIENT_ID}"
+        f"&redirect_uri={REDIRECT_URI}"
+        f"&response_type=code"
+        f"&scope=openid%20email%20profile"
+        f"&access_type=offline"
+    )
+    return RedirectResponse(auth_url)
+
+@router.api_route("/callback", methods=["POST", "GET"])
+async def google_callback(request: Request, db: Session = Depends(get_db)):
+    """Handle Google OAuth callback and authenticate user."""
+    
+    # Extract the code based on the request method (GET or POST)
+    if request.method == "GET":
+        code = request.query_params.get("code")
+    
+
+    elif request.method == "POST":
+        print("post")
+        code = await request.form()
+        code = code.get("credential")  # Get the code from the form data
+    
+    if not code:
+        raise HTTPException(status_code=400, detail="Authorization code not provided")
+
+    token_data = {
+        "code": code,
+        "client_id": GOOGLE_CLIENT_ID,
+        "client_secret": GOOGLE_CLIENT_SECRET,
+        "redirect_uri": REDIRECT_URI,
+        "grant_type": "authorization_code",
+    }
+    
+    token_res = requests.post(GOOGLE_TOKEN_URL, data=token_data)
+    token_json = token_res.json()
+
+    if "access_token" not in token_json:
+        raise HTTPException(status_code=400, detail="Failed to retrieve access token")
+
+    access_token = token_json["access_token"]
+
+    headers = {"Authorization": f"Bearer {access_token}"}
+    user_info_res = requests.get(GOOGLE_USER_INFO_URL, headers=headers)
+    user_info = user_info_res.json()
+
+    email = user_info.get("email")
+    username = user_info.get("name")
+
+    if not email:
+        raise HTTPException(status_code=400, detail="Email not found in Google account")
+
+    # Check if user exists
+    user = db.query(User).filter(User.email == email).first()
+    if not user:
+        user = User(email=email, username=username, password=hash_password("google-auth"))
+        db.add(user)
+        db.commit()
+        db.refresh(user)
+
+    # Create JWT token
+    jwt_token = create_access_token(user.username, user.id)
+
+    response = RedirectResponse(url="/user/profile")
+    response.set_cookie(key="access_token", value=f"Bearer {jwt_token}", httponly=True)
+    
+    return response

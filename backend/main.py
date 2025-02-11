@@ -1,4 +1,5 @@
 from fastapi import FastAPI, Depends,status
+from starlette.middleware.sessions import SessionMiddleware
 from fastapi.responses import RedirectResponse
 from backend.routes import users, auth
 from backend.database.db import engine, Base
@@ -7,10 +8,13 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.responses import HTMLResponse
 from fastapi import Request
 from jinja2 import Environment, FileSystemLoader
-
+import os
+from dotenv import load_dotenv
+load_dotenv()
 # Create FastAPI app
 app = FastAPI()
-
+SECRET_KEY = os.getenv("SECRET_KEY")
+app.add_middleware(SessionMiddleware,secret_key=SECRET_KEY)
 # Create database tables
 Base.metadata.create_all(bind=engine)
 

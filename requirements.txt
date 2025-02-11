@@ -6,4 +6,10 @@ passlib[bcrypt]
 pydantic[email]
 python-jose[cryptography]  
 jwt
-jinja2   
+jinja2
+authlib
+python-dotenv
+aiohttp
+pydantic[extra]
+requests
+starlette
