@@ -19,18 +19,31 @@ from urllib.parse import quote
 import os
 from dotenv import load_dotenv  
 import requests
+from jose import jwk
+import jwt as pyjwt
+import random
+import string 
+
+def generate_random_string(length=12):
+    characters = string.ascii_letters + string.digits
+    return ''.join(random.choice(characters) for i in range(length))
 
 router = APIRouter(prefix="/auth")
 
 oauth = OAuth()
+GOOGLE_CLIENT_ID = os.getenv("GOOGLE_CLIENT_ID")
+GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
+REDIRECT_URI = os.getenv("REDIRECT_URI")
+SECRET_KEY = os.getenv("SECRET_KEY")
+
 oauth.register(
     name='google',
     server_metadata_url='https://accounts.google.com/.well-known/openid-configuration',
-    client_id=CLIENT_ID,
-    client_secret=CLIENT_SECRET,
+    client_id=GOOGLE_CLIENT_ID,
+    client_secret=GOOGLE_CLIENT_SECRET,
     client_kwargs={
         'scope': 'email openid profile',
-        'redirect_uri': 'http://localhost:8000/auth'
+        'redirect_uri': 'http://localhost:8000/auth/callback'
     }
 )
 
@@ -41,9 +54,7 @@ GOOGLE_CLIENT_SECRET = os.getenv("GOOGLE_CLIENT_SECRET")
 REDIRECT_URI = os.getenv("REDIRECT_URI")
 SECRET_KEY = os.getenv("SECRET_KEY")
 
-GOOGLE_AUTH_URL = "https://accounts.google.com/o/oauth2/auth"
-GOOGLE_TOKEN_URL = "https://oauth2.googleapis.com/token"
-GOOGLE_USER_INFO_URL = "https://www.googleapis.com/oauth2/v2/userinfo"
+
 
 SECRET_KEY = "gojo-TheStrongest"  # Change this to a secure, random string
 ALGORITHM = "HS256"
@@ -63,7 +74,7 @@ def get_form_data(
     return UserCreate(email=email, username=username, password=password)
 
 @router.api_route("/register",methods=["GET","POST"])
-def register(request: Request, user: UserCreate=Depends(get_form_data) , db: Session = Depends(get_db)):
+async def register(request: Request, user: UserCreate=Depends(get_form_data) , db: Session = Depends(get_db)):
     if request.method == "GET":
         redirect_url = f"/login?form=register"
         return RedirectResponse(url=redirect_url, status_code=status.HTTP_303_SEE_OTHER)
@@ -91,8 +102,8 @@ def register(request: Request, user: UserCreate=Depends(get_form_data) , db: Ses
 
 
 @router.api_route("/token", methods=["GET", "POST"])
-def login(form_data: Annotated[customOAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db), error: str = Query(None)):
-    user = authenticate_user(form_data.username, form_data.username, form_data.password, db)
+async def login(form_data: Annotated[customOAuth2PasswordRequestForm, Depends()], db: Session = Depends(get_db), error: str = Query(None)):
+    user = await authenticate_user(form_data.username, form_data.username, form_data.password, db)
     if not user:
         raise HTTPException(status_code=401, detail="Invalid credentials")
     
@@ -105,7 +116,7 @@ def login(form_data: Annotated[customOAuth2PasswordRequestForm, Depends()], db: 
     return response
 
 
-def authenticate_user(username, email, password, db: Session):
+async def authenticate_user(username, email, password, db: Session):
     user = db.query(User).filter(User.username == username).first()
 
     if not user:
@@ -144,7 +155,7 @@ def get_token_from_cookie(request: Request) -> str:
     return token
 
 
-def get_current_user(
+async def get_current_user(
     token: str = Depends(get_token_from_cookie),
     db: Session = Depends(get_db)
 ) -> UserResponse:
@@ -171,74 +182,92 @@ def get_current_user(
             headers={"WWW-Authenticate": "Bearer"},
         )
     
-@router.get("/google-login")
-def google_login():
-    """Redirect users to Google's OAuth consent screen."""
-    auth_url = (
-        f"{GOOGLE_AUTH_URL}?"
-        f"client_id={GOOGLE_CLIENT_ID}"
-        f"&redirect_uri={REDIRECT_URI}"
-        f"&response_type=code"
-        f"&scope=openid%20email%20profile"
-        f"&access_type=offline"
-    )
-    return RedirectResponse(auth_url)
+GOOGLE_JWKS_URI = 'https://www.googleapis.com/oauth2/v3/certs'
+
+async def get_google_public_keys():
+    """Fetch Google's public keys for JWT verification."""
+    try:
+        response = requests.get(GOOGLE_JWKS_URI)
+        response.raise_for_status()  # Raise HTTPError for bad responses
+        return response.json()
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching Google public keys: {e}")
+        return None
+
 
 @router.api_route("/callback", methods=["POST", "GET"])
 async def google_callback(request: Request, db: Session = Depends(get_db)):
-    """Handle Google OAuth callback and authenticate user."""
-    
-    # Extract the code based on the request method (GET or POST)
+    """Handle Google OAuth callback and decode credentials directly."""
+
     if request.method == "GET":
-        code = request.query_params.get("code")
-    
-
+        credentials = request.query_params.get("credentials") # Assuming 'credentials' is in query params
     elif request.method == "POST":
-        print("post")
-        code = await request.form()
-        code = code.get("credential")  # Get the code from the form data
+        form_data = await request.form()
+        credentials = form_data.get("credential") # Assuming 'credentials' is in form data
+        print(f"Form data received: {form_data}") # Debugging, remove in production
+    print(credentials)
+    if not credentials:
+        raise HTTPException(status_code=400, detail="Credentials not provided")
+
+    id_token = credentials # Rename for clarity
+
+    try:
+        public_keys_data = await get_google_public_keys()
+        if not public_keys_data:
+            raise HTTPException(status_code=500, detail="Failed to fetch Google public keys")
+
+        # Get the key for verification based on 'kid' in the header
+        headers = jwt.get_unverified_header(id_token)
+        kid = headers.get('kid')
+        if not kid:
+            raise HTTPException(status_code=400, detail="JWT missing 'kid' header")
+
+        public_key = None
+        for key_data in public_keys_data.get('keys', []):
+            if key_data['kid'] == kid:
+                public_key = jwk.construct(key_data)
+                break
+
+        if not public_key:
+            raise HTTPException(status_code=400, detail=f"Public key with kid '{kid}' not found")
+
+        # Verify the JWT signature and claims securely
+        decoded_payload = jwt.decode(
+            id_token,
+            public_key,
+            algorithms=["RS256"], # Google uses RS256
+            issuer=["https://accounts.google.com", "accounts.google.com"],
+            # audience=YOUR_GOOGLE_CLIENT_ID  # IMPORTANT: Validate your Client ID here if needed
+            options={"verify_signature": True, "verify_iss": True, "verify_aud": False, "verify_exp": True}
+        )
+
+
+        email = decoded_payload.get("email")
+        username = decoded_payload.get("name") # Or construct from given_name, family_name
+
+        print(f"Verified Email: {email}")
+        print(f"Verified Username: {username}")
+
+        
+        user = db.query(User).filter(User.email == email).first()
+
+        if not user:
+            user = User(email=email, username=username, password=hash_password(generate_random_string(random.randint(6,14))))
+            db.add(user)
+            db.commit()
+            db.refresh(user)
+        jwt_token = create_access_token(user.username, user.id,expires_delta=timedelta(minutes=30 ))
+        response = RedirectResponse(url="/user/profile", status_code=status.HTTP_303_SEE_OTHER)
+        response.set_cookie(key="access_token", value=f"Bearer {jwt_token}", httponly=True)
+        return response
+    except HTTPException as e:
+        raise e
+    except Exception as e:
+        print(f"Error during Google OAuth callback (direct decode): {e}")
+        raise HTTPException(status_code=500, detail="Google authentication failed (direct decode)")
+
     
-    if not code:
-        raise HTTPException(status_code=400, detail="Authorization code not provided")
 
-    token_data = {
-        "code": code,
-        "client_id": GOOGLE_CLIENT_ID,
-        "client_secret": GOOGLE_CLIENT_SECRET,
-        "redirect_uri": REDIRECT_URI,
-        "grant_type": "authorization_code",
-    }
-    
-    token_res = requests.post(GOOGLE_TOKEN_URL, data=token_data)
-    token_json = token_res.json()
+   
 
-    if "access_token" not in token_json:
-        raise HTTPException(status_code=400, detail="Failed to retrieve access token")
 
-    access_token = token_json["access_token"]
-
-    headers = {"Authorization": f"Bearer {access_token}"}
-    user_info_res = requests.get(GOOGLE_USER_INFO_URL, headers=headers)
-    user_info = user_info_res.json()
-
-    email = user_info.get("email")
-    username = user_info.get("name")
-
-    if not email:
-        raise HTTPException(status_code=400, detail="Email not found in Google account")
-
-    # Check if user exists
-    user = db.query(User).filter(User.email == email).first()
-    if not user:
-        user = User(email=email, username=username, password=hash_password("google-auth"))
-        db.add(user)
-        db.commit()
-        db.refresh(user)
-
-    # Create JWT token
-    jwt_token = create_access_token(user.username, user.id)
-
-    response = RedirectResponse(url="/user/profile")
-    response.set_cookie(key="access_token", value=f"Bearer {jwt_token}", httponly=True)
-    
-    return response
