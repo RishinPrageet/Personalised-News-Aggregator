@@ -42,10 +42,39 @@
       display: block;
 
     }
+    .alert {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      padding: 1rem 2rem;
+      border-radius: 0.5rem;
+      z-index: 100;
+      animation: popOut 0.7s ease-out;
+    }
+    .alert-success {
+      background: #059669;
+      color: white;
+    }
+    .alert-error {
+      background: #dc2626;
+      color: white;
+    }
   </style>
   </style>
 </head>
 <body class="text-white flex justify-center items-center min-h-screen bg-cover bg-center text-lg" style="background-image: url('../static/log_back.JPG');">
+  {% if message %}
+    <div id="alert-message" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-green-500 text-white px-6 py-3 rounded shadow-green-200 transition-opacity duration-500">
+      {{ message }}
+    </div>
+  {% endif %}
+  
+  {% if error %}
+    <div id="alert-error" class="fixed top-5 left-1/2 transform -translate-x-1/2 bg-red-500 text-white px-6 py-3 rounded shadow-red-200 transition-opacity duration-500">
+      {{ error }}
+    </div>
+  {% endif %}
   <div class="branding absolute top-5 left-5 flex items-center hidden" id="logo-box">
     <img src="../static/logo_100.png" alt="News Hub Logo" class="h-12 mr-2">
     <h1 class="text-3xl font-bold">NEWS HUB</h1>
@@ -120,32 +149,65 @@
   </div>
 
   <script>
+    // Add auto-hide for messages
+    setTimeout(() => {
+      const alerts = document.querySelectorAll('#alert-message, #alert-error');
+      alerts.forEach(alert => {
+        // Add the Tailwind class for opacity 0 (with a transition)
+        alert.classList.add('opacity-0');
+        // Remove the element after the transition (500ms as specified in the duration class)
+        setTimeout(() => alert.remove(), 500);
+      });
+    }, 5000);
+
+    // Modified load event handler to preserve form state
     window.addEventListener("load", function () {
       const loginBox = document.getElementById("login-box");
       loginBox.classList.remove("hidden");
       loginBox.classList.add("animate-pop");
+      
       const logoBox = document.getElementById("logo-box");
       logoBox.classList.remove("hidden");
       logoBox.classList.add("animate-pop");
+      
       document.getElementsByClassName('g_id_signin')[0].removeAttribute('style');
+
+      // Check URL parameters to determine active form
     });
 
-    function handleCredentialResponse(response) {
-      console.log("Encoded JWT ID token: " + response.credential);
-      // Send response.credential to backend for verification
+      function showLogin() {
+      document.getElementById('login-form').classList.add('active');
+      document.getElementById('register-form').classList.remove('active');
+      // Remove the 'form' query parameter (if present)
+      history.replaceState(null, '', window.location.pathname);
     }
+    function showRegister() {
+      document.getElementById('login-form').classList.remove('active');
+  
+      document.getElementById('register-form').classList.add('active');
 
-    // Toggle between login and register forms
+      // Update the URL to include ?form=register
+      history.replaceState(null, '', '?form=register');
+    }
     document.getElementById('show-register').addEventListener('click', function (e) {
       e.preventDefault();
-      document.getElementById('login-form').classList.remove('active');
-      document.getElementById('register-form').classList.add('active');
+      showRegister();
     });
 
     document.getElementById('show-login').addEventListener('click', function (e) {
       e.preventDefault();
-      document.getElementById('register-form').classList.remove('active');
-      document.getElementById('login-form').classList.add('active');
+      showLogin();
+    });
+    window.addEventListener('DOMContentLoaded', function () {
+      const urlParams = new URLSearchParams(window.location.search);
+      if (urlParams.get('form') === 'register') {
+        showRegister();
+      } else {
+        showLogin();
+      }
+
+
+
     });
   </script>
 </body>

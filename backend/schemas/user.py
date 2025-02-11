@@ -1,12 +1,13 @@
 from pydantic import BaseModel, EmailStr,Field,ConfigDict
+from fastapi import Form
 from datetime import datetime
 from typing import Optional
 
 
 class UserCreate(BaseModel):
-    email: EmailStr  
-    username: str = Field(..., min_length=3)  
-    password: str = Field(..., min_length=6)
+    email: Optional[EmailStr] = Form(default=None)
+    username: Optional[str] = Form(default=None)
+    password: Optional[str] = Form(default=None)
 
     model_config = ConfigDict(from_attributes=True)
 
