@@ -10,4 +10,4 @@ class token(BaseModel):
 class Form(BaseModel):
     username: str = Form(...),
     email: str = Form(...),
-    password: str = Form(...),
+    password: str = Form(...), 

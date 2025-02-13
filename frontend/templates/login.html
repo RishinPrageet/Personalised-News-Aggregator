@@ -33,14 +33,14 @@
     body {
       font-family: 'Open Sans', sans-serif;
     }
-    .register, .login {
+    /* Hide forms by default */
+    .register, .login, .forgot {
       display: none;
-
     }
 
-    .register.active, .login.active {
+    /* Only display the form that has the active class */
+    .register.active, .login.active, .forgot.active {
       display: block;
-
     }
     .alert {
       position: fixed;
@@ -61,11 +61,17 @@
       color: white;
     }
     .g_id_signin {
-    display: block !important;
-    width: 250px;
-    height: 50px;
+      display: block !important;
+      width: 250px;
+      height: 50px;
+    }
+    .change-password {
+  display: none;
 }
-  </style>
+
+.change-password.active {
+  display: block;
+}
   </style>
   <script src="https://accounts.google.com/gsi/client" async defer></script>
 </head>
@@ -98,10 +104,11 @@
         </div>
         <div class="mb-2">
           <label for="password" class="block text-sm font-medium">Password</label>
-          <input type="password" id="password" name="password" placeholder="Enter your password" class="w-full mt-2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none  text-sm" required>
+          <input type="password" id="password" name="password" placeholder="Enter your password" class="w-full mt-2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm" required>
         </div>
         <div class="mb-6 text-left">
-          <a href="#" class="text-sm text-indigo-300 hover:underline">forgot password?</a>
+          <!-- Notice the added id "show-forgot" for toggling -->
+          <a href="#" id="show-forgot" class="text-sm text-indigo-300 hover:underline">forgot password?</a>
         </div>
         <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-blue-500">Log In</button>
       </form>
@@ -124,9 +131,8 @@
         </div>
         <div class="mb-4">
           <label for="password" class="block text-sm font-medium">Password</label>
-          <input type="password" id="password" name="password" placeholder="Enter your password" class="w-full mt-2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none  text-sm" required>
+          <input type="password" id="password" name="password" placeholder="Enter your password" class="w-full mt-2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm" required>
         </div>
-
         <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-blue-500">Sign Up</button>
       </form>
       <div class="mb-6 text-center">
@@ -134,9 +140,42 @@
       </div>
     </div>
 
+    <!-- Left Side - Forgot Password -->
+    <div id="forgot-form" class="w-1/2 p-6 border-r border-gray-500 basis-[400px] forgot">
+      <h2 class="text-[40px] font-bold text-center mb-6">Reset Password</h2>
+      <form action="auth/forgot" method="POST">
+        <div class="mb-4">
+          <label for="reset-email" class="block text-sm font-medium">Email Address</label>
+          <input type="email" id="reset-email" name="email" placeholder="Enter your email" class="w-full mt-2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm" required>
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-blue-500">Send Reset Link</button>
+      </form>
+      <div class="mb-6 text-center">
+        <a href="#" id="back-to-login" class="text-sm text-indigo-300 hover:underline">Back to Login</a>
+      </div>
+    </div>
+    <!-- Change Password Section (initially hidden) -->
+<div id="change-password-form" class="w-1/2 p-6 border-r border-gray-500 basis-[400px] change-password">
+  <h2 class="text-[40px] font-bold text-center mb-6">Change Password</h2>
+  <form action="/auth/change_password" method="POST"> 
+    <!-- Hidden field to hold the token -->
+
+    <input type="hidden" name="token" value="{{ token }}">
+    <div class="mb-4">
+      <label for="new-password" class="block text-sm font-medium">New Password</label>
+      <input type="password" id="new-password" name="password" placeholder="Enter your new password" class="w-full mt-2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm" required>
+    </div>
+    <button type="submit" class="w-full bg-indigo-600 text-white py-2 rounded-lg hover:bg-indigo-800 focus:outline-none focus:ring-2 focus:ring-blue-500">Change Password</button>
+  </form>
+  <div class="mb-6 text-center">
+    <a href="#" id="back-to-login_1" class="text-sm text-indigo-300 hover:underline">Back to Login</a>
+  </div>
+</div>
+
+
     <!-- Right Side - Google Login -->
-    <div class="min-w-1/3  p-6 flex flex-col items-center justify-center flex-nowrap basis-[10px] whitespace-nowrap ml-14 mb-10 pr-16">
-      <h2 class="text-2xl font-bold text-center mb-6 flex-nowrap">Or Sign in with Google</h2>
+    <div class="min-w-1/3 p-6 flex flex-col items-center justify-center flex-nowrap basis-[10px] whitespace-nowrap ml-14 mb-10 pr-16">
+      <h2 class="text-2xl font-bold text-center mb-6">Or Sign in with Google</h2>
       
       <div id="g_id_onload"
            data-client_id="372110869728-0ekjc8sstlqig00phngldtcf8s6j4vjb.apps.googleusercontent.com"
@@ -150,24 +189,21 @@
         data-text="Google"
         data-shape="rectangular"  
         data-logo_alignment="center">
-      
       </div>
     </div>
   </div>
 
   <script>
-    // Add auto-hide for messages
+    // Auto-hide for messages after 5 seconds
     setTimeout(() => {
       const alerts = document.querySelectorAll('#alert-message, #alert-error');
       alerts.forEach(alert => {
-        // Add the Tailwind class for opacity 0 (with a transition)
         alert.classList.add('opacity-0');
-        // Remove the element after the transition (500ms as specified in the duration class)
         setTimeout(() => alert.remove(), 500);
       });
     }, 5000);
 
-    // Modified load event handler to preserve form state
+    // Animate the login box and logo on load
     window.addEventListener("load", function () {
       const loginBox = document.getElementById("login-box");
       loginBox.classList.remove("hidden");
@@ -178,44 +214,75 @@
       logoBox.classList.add("animate-pop");
       
       document.getElementsByClassName('g_id_signin')[0].removeAttribute('style');
-
-      // Check URL parameters to determine active form
     });
 
-      function showLogin() {
+    // Functions to toggle forms
+    function showLogin() {
       document.getElementById('login-form').classList.add('active');
       document.getElementById('register-form').classList.remove('active');
-      // Remove the 'form' query parameter (if present)
+      document.getElementById('forgot-form').classList.remove('active');
       history.replaceState(null, '', window.location.pathname);
     }
     function showRegister() {
       document.getElementById('login-form').classList.remove('active');
-  
+      document.getElementById('forgot-form').classList.remove('active');
       document.getElementById('register-form').classList.add('active');
-
-      // Update the URL to include ?form=register
       history.replaceState(null, '', '?form=register');
     }
+    function showForgot() {
+      document.getElementById('login-form').classList.remove('active');
+      document.getElementById('register-form').classList.remove('active');
+      document.getElementById('forgot-form').classList.add('active');
+      history.replaceState(null, '', '?form=forgot');
+    }
+    function showChangePassword() {
+  document.getElementById('login-form').classList.remove('active');
+  document.getElementById('register-form').classList.remove('active');
+  document.getElementById('forgot-form').classList.remove('active');
+  document.getElementById('change-password-form').classList.add('active');
+  const urlParams = new URLSearchParams(window.location.search);
+  const token = urlParams.get('token');
+  const newUrl = token ? `?form=change&token=${encodeURIComponent(token)}` : '?form=change';
+  
+  history.replaceState(null, '', newUrl);
+}
+
+    // Attach event listeners for toggling forms
     document.getElementById('show-register').addEventListener('click', function (e) {
       e.preventDefault();
       showRegister();
     });
-
     document.getElementById('show-login').addEventListener('click', function (e) {
       e.preventDefault();
       showLogin();
     });
-    window.addEventListener('DOMContentLoaded', function () {
-      const urlParams = new URLSearchParams(window.location.search);
-      if (urlParams.get('form') === 'register') {
-        showRegister();
-      } else {
-        showLogin();
-      }
-
-
-
+    document.getElementById('show-forgot').addEventListener('click', function (e) {
+      e.preventDefault();
+      showForgot();
     });
+    document.getElementById('back-to-login').addEventListener('click', function (e) {
+      e.preventDefault();
+      showLogin();
+    });
+    document.getElementById('back-to-login_1').addEventListener('click', function (e) {
+      e.preventDefault();
+      showLogin();
+    });
+
+    // Set active form based on URL query parameter
+    window.addEventListener('DOMContentLoaded', function () {
+  const urlParams = new URLSearchParams(window.location.search);
+  const formParam = urlParams.get('form');
+  if (formParam === 'register') {
+    showRegister();
+  } else if (formParam === 'forgot') {
+    showForgot();
+  } else if (formParam === 'change') {
+    showChangePassword();
+  } else {
+    showLogin();
+  }
+});
   </script>
 </body>
 </html>

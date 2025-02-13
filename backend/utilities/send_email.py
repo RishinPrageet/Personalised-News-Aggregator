@@ -13,6 +13,7 @@ EMAIL_PASSWORD = os.getenv("EMAIL_PASSWORD")
 
 
 def send_email(to_email: str, subject: str, body: str):
+    print(body)
     msg = MIMEMultipart()
     msg["From"] = EMAIL_SENDER
     msg["To"] = to_email

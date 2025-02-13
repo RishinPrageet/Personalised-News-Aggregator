@@ -26,7 +26,7 @@ env = Environment(
     loader=FileSystemLoader('frontend/templates'),
     trim_blocks=True,  # Remove leading newlines for blocks
     lstrip_blocks=True,  # Remove leading spaces before blocks
-    autoescape=True,  # Automatically escape the output for safety
+    autoescape=True,  # Automatically escape the output for safety 
 )
 
 # Initialize FastAPI's Jinja2Templates with the custom environment
@@ -41,5 +41,5 @@ def get_login_page(request: Request,error : str = None , message : str =None):
     return RedirectResponse(url=redirect_url, status_code=status.HTTP_303_SEE_OTHER)
 # Endpoint to serve login page
 @app.get("/login", response_class=HTMLResponse)
-def get_login_page(request: Request,error : str = None , message : str =None):
-    return templates.TemplateResponse("login.html", {"request": request,"error": error,"message":message})
+def get_login_page(request: Request,error : str = None , message : str =None,token : str =None):
+    return templates.TemplateResponse("login.html", {"request": request,"error": error,"message":message,"token": token})
