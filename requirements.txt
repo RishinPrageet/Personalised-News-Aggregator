@@ -14,7 +14,7 @@ pydantic[extra]
 requests
 starlette
 feedparser
-transformers
+transformers==4.38.2
 python-multipart
 beautifulsoup4
 torch
