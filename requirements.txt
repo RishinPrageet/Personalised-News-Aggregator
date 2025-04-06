@@ -17,3 +17,4 @@ feedparser
 transformers
 python-multipart
 beautifulsoup4
+torch
