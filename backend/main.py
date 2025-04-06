@@ -12,6 +12,9 @@ import os
 from dotenv import load_dotenv
 
 load_dotenv()
+import warnings
+warnings.filterwarnings("ignore", category=FutureWarning)
+
 
 # Create FastAPI app
 app = FastAPI()
