@@ -4,3 +4,8 @@ key.pem
 cert.pem 
 .aggregator
 __pycache__/
+/frontend/react-app/newsaggregation/node_modules/
+/frontend/react-app/zip files/
+/frontend/react-app/newsaggregation.zip
+venv/
+test.html

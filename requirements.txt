@@ -13,3 +13,7 @@ aiohttp
 pydantic[extra]
 requests
 starlette
+feedparser
+transformers
+python-multipart
+beautifulsoup4

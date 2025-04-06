@@ -3,12 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <script src="https://unpkg.com/@tailwindcss/browser@4"></script>
+  <!-- <script src="https://unpkg.com/@tailwindcss/browser@4"></script> -->
+  <script src="https://cdn.tailwindcss.com"></script>
   <link href="https://fonts.googleapis.com/css2?family=Open+Sans:wght@400;500;700&display=swap" rel="stylesheet">
   <link href="https://fonts.googleapis.com/css2?family=League+Spartan:wght@700&display=swap" rel="stylesheet">
   <script src="https://accounts.google.com/gsi/client" async></script>
   <title>Login - News Aggregator</title>
   <style>
+    input {
+  color: black !important; /* Ensures text is visible */
+}
     @keyframes popOut {
       0% {
         opacity: 0;
@@ -92,7 +96,7 @@
     <h1 class="text-3xl font-bold">NEWS HUB</h1>
   </div>
 
-  <div id="login-box" class="flex flex-nowrap bg-gray-700/60 backdrop-blur-3xl p-8 rounded-2xl shadow-lg w-full max-w-dvh hidden">
+  <div id="login-box" class="flex flex-nowrap bg-gray-700/60 backdrop-blur-3xl p-8 rounded-2xl shadow-lg  max-w-dvh hidden">
     
     <!-- Left Side - Regular Login -->
     <div id="login-form" class="w-1/2 p-6 border-r border-gray-500 basis-[400px] login active">
@@ -102,7 +106,7 @@
           <label for="username" class="block text-sm font-medium">Email Address</label>
           <input type="text" id="username" name="username" placeholder="Enter your email" class="w-full mt-2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm" required>
         </div>
-        <div class="mb-2">
+        <div class="mb-4">
           <label for="password" class="block text-sm font-medium">Password</label>
           <input type="password" id="password" name="password" placeholder="Enter your password" class="w-full mt-2 px-4 py-2 border rounded-lg focus:ring-2 focus:ring-indigo-400 focus:outline-none text-sm" required>
         </div>

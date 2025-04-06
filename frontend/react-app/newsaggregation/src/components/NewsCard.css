@@ -1,0 +1,263 @@
+.news-card {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--card-shadow);
+  overflow: hidden;
+  transition: all var(--transition-normal) ease;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  text-align: left;
+  height: 100%;
+  border: 1px solid var(--border-color);
+  animation: fadeIn 0.5s ease forwards;
+  animation-delay: calc(var(--animation-order, 0) * 0.1s);
+  opacity: 0;
+  position: relative;
+  cursor: pointer;
+}
+
+/* Hover effect for slight lift */
+.news-card:hover {
+  transform: translateY(-5px);
+  box-shadow: var(--shadow-xl);
+  border-color: var(--border-color-hover);
+}
+
+/* Image Styling */
+.news-card-image-container {
+  position: relative;
+  width: 100%;
+  height: 200px;
+  overflow: hidden;
+}
+
+.news-card img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.news-card:hover img {
+  transform: scale(1.05);
+}
+
+/* Content container */
+.news-card-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+}
+
+/* News Title */
+.news-card h3 {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0 0 12px;
+  line-height: 1.4;
+}
+
+/* Article source */
+.article-source {
+  font-size: 14px;
+  color: var(--accent-color);
+  margin-bottom: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.article-source svg {
+  font-size: 12px;
+}
+
+/* Description styling: limit to 4 lines with ellipsis */
+.news-card p {
+  /* Future (unprefixed) property for compatibility when it becomes standardized */
+  line-clamp: 3;
+
+  /* Current approach using -webkit- prefixed properties */
+  display: -webkit-box;
+  -webkit-line-clamp: 3; /* Limit to 3 lines */
+  -webkit-box-orient: vertical;
+
+  /* Common overflow settings */
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  /* Fallback: if line-clamp isn't supported, cut off after 3 lines */
+  line-height: 1.6;
+  max-height: calc(1.6em * 3); /* 3 lines */
+  color: var(--text-secondary);
+  margin-bottom: 20px;
+  font-size: 15px;
+}
+
+/* Error message */
+.error-message {
+  color: var(--error);
+  font-size: 14px;
+  margin: 8px 0;
+  background-color: rgba(239, 68, 68, 0.1);
+  padding: 10px;
+  border-radius: var(--radius-md);
+  text-align: center;
+}
+
+/* Button Group */
+.button-group {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 16px;
+  border-top: 1px solid var(--border-color);
+}
+
+/* Buttons */
+.button-group button {
+  flex: 1;
+  padding: 12px;
+  border-radius: var(--radius-md);
+  font-weight: 600;
+  border: none;
+  cursor: pointer;
+  transition: all var(--transition-normal) ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  font-size: 14px;
+}
+
+/* Read More Button */
+.read-more-btn {
+  background: var(--accent-color);
+  color: white;
+}
+
+.read-more-btn:hover {
+  background: var(--accent-hover);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Read Later Button */
+.read-later {
+  background: var(--bg-tertiary);
+  color: var(--accent-color);
+  border: 1px solid var(--border-color) !important;
+}
+
+.read-later:hover {
+  background: var(--bg-secondary);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+/* Saved Button (When read later is clicked) */
+.saved {
+  background: var(--accent-color);
+  color: white;
+  border: 1px solid var(--accent-color) !important;
+}
+
+.saved:hover {
+  background: var(--accent-hover);
+}
+
+/* Loading state */
+.button-group button.loading {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.spinner {
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+/* Category tag */
+.article-category {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  background: rgba(0, 0, 0, 0.6);
+  color: white;
+  padding: 4px 10px;
+  border-radius: var(--radius-full);
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+/* Date tag */
+.article-date {
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+/* Comment count */
+.comment-count {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--text-tertiary);
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px dashed var(--border-color);
+}
+
+.comment-count svg {
+  color: var(--accent-color);
+}
+
+/* Mobile responsiveness */
+@media (max-width: 768px) {
+  .news-card-image-container {
+    height: 180px;
+  }
+
+  .news-card-content {
+    padding: 16px;
+  }
+
+  .news-card h3 {
+    font-size: 16px;
+  }
+
+  .news-card p {
+    font-size: 14px;
+    -webkit-line-clamp: 2;
+    max-height: calc(1.6em * 2);
+  }
+}
+
+@media (max-width: 480px) {
+  .button-group {
+    flex-direction: column;
+  }
+
+  .button-group button {
+    width: 100%;
+  }
+}
+

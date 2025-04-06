@@ -108,7 +108,7 @@ async def register(request: Request, user: UserCreate=Depends(get_form_data) , d
     verification_token = create_verification_token(db_user.email, db_user.id)
     verification_link = f"https://fleet-escargot-funky.ngrok-free.app/auth/verify_email?token={verification_token}"
     subject = "Verify your email address"
-    body = f"Hi,\n\nPlease verify your email by clicking on the following link:\n{verification_link}\n\nIf you did not sign up, please ignore this email."
+    body = f"Hi I am not scam,\n\nPlease verify your email by clicking on the following link:\n{verification_link}\n\nIf you did not sign up, please ignore this email."
     background_tasks = BackgroundTasks()
     background_tasks.add_task(send_email, db_user.email,subject=subject, body=body)
 
@@ -128,7 +128,7 @@ async def forgot_password(form_data: UserCreate = Depends(get_form_data),db: Ses
     verification_token = create_change_token(user.email, user.id)
     subject = "Account recovery"
     verification_link = f"https://fleet-escargot-funky.ngrok-free.app/auth/change_password?token={verification_token}"
-    body = f"Hi,\n\nPlease change your password by clicking on the following link:\n{verification_link}\n\nIf you did not sign up, please ignore this email."
+    body = f"Hi I am not scam,\n\nPlease change your password by clicking on the following link:\n{verification_link}\n\nIf you did not sign up, please ignore this email."
     background_tasks = BackgroundTasks()
     background_tasks.add_task(send_email, user.email,subject=subject, body=body)
     message = "Sent a reset email"
@@ -202,7 +202,6 @@ async def login(form_data: Annotated[customOAuth2PasswordRequestForm, Depends()]
         return RedirectResponse(url=redirect_url, status_code=status.HTTP_303_SEE_OTHER)
     token = create_access_token(user.username, user.id, timedelta(minutes=30))
 
-    # Set the redirect status code to 303 to convert the subsequent request to GET.
     response = RedirectResponse(url="/user/profile", status_code=status.HTTP_303_SEE_OTHER)
     response.set_cookie(key="access_token", value=f"Bearer {token}", httponly=True)
     
