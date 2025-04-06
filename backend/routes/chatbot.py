@@ -21,8 +21,12 @@ torch.cuda.empty_cache()
 
 # Load the conversational model with fp16 precision
 tokenizer = AutoTokenizer.from_pretrained("microsoft/DialoGPT-medium")
-model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-medium", torch_dtype=torch.float16).to("cuda")
-chat_model = pipeline("text-generation", model=model, tokenizer=tokenizer, device=0)
+device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+model = AutoModelForCausalLM.from_pretrained("microsoft/DialoGPT-medium", torch_dtype=torch.float16 if device.type == "cuda" else torch.float32).to(device)
+
+# Dynamically set the device for the pipeline
+pipeline_device = 0 if device.type == "cuda" else -1
+chat_model = pipeline("text-generation", model=model, tokenizer=tokenizer, device=pipeline_device)
 
 @router.post("/", response_model=ChatbotResponse)
 def chatbot_response(request: ChatbotRequest, db: Session = Depends(get_db)):
